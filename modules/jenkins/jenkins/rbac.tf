@@ -30,4 +30,9 @@ module "rbac" {
       verbs      = ["get"]
     },
   ]
+  overrides = {
+    annotations = {
+      "eks.amazonaws.com/role-arn" = var.irsa_role_arn
+    }
+  }
 }

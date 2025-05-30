@@ -7,6 +7,10 @@ locals {
     ports                = var.ports
     enable_service_links = false
 
+    node_selector = {
+      role = "green"
+    }
+
     containers = [
       {
         name  = "jenkins"
@@ -41,6 +45,10 @@ locals {
             }
           },
           {
+            name  = "GIT_CONFIG_GLOBAL"
+            value = "/var/jenkins_home/.gitconfig"
+          },
+          {
             name  = "JAVA_OPTS"
             value = <<-EOF
             -Xmx$(REQUESTS_MEMORY)m
@@ -55,6 +63,12 @@ locals {
         ], var.env)
 
         resources = var.resources
+
+        # security_context = {
+        #   privileged = true
+        #   run_asuser = 0  # Run as root like in the debug pod
+        #   # run_asuser = 50000
+        # }
 
         startup_probe = {
           initial_delay_seconds = 120
@@ -102,6 +116,14 @@ locals {
       }
     ]
 
+
+    # EKS Permission Notes:
+    # - In EKS with EFS, files often show as owned by UID 50000 regardless of container user
+    # - 'chown' operations typically fail due to EKS security policies, even as root
+    # - Instead of fighting this behavior, we simply skip this step
+    # - Files are owned by UID 50000, so we run Jenkins as UID 50000 to match
+    # - For EFS volumes, this user ID mapping is handled by Kubernetes automatically
+
     init_containers = [
       {
         name  = "init"
@@ -109,7 +131,7 @@ locals {
         command = [
           "sh",
           "-cx",
-          "chown jenkins /var/jenkins_home"
+          "export GIT_CONFIG_GLOBAL=/var/jenkins_home/.gitconfig && git config --global --add safe.directory '*' && ls -la /var/jenkins_home/.gitconfig && cat /var/jenkins_home/.gitconfig"
         ]
 
         security_context = {
@@ -126,7 +148,10 @@ locals {
     ]
 
     security_context = {
-      fsgroup = 1000
+      # fsgroup = 0  # Match the success case from debug pod
+      fsgroup = 50000
+      run_asuser = 1000
+      # fsgroup = 1000
     }
 
     service_account_name = module.rbac.service_account.metadata[0].name

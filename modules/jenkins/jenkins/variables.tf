@@ -50,3 +50,5 @@ variable "pvc_name" {}
 variable "timezone" {
   default = "America/New_York"
 }
+
+variable "irsa_role_arn" {}
