@@ -15,6 +15,7 @@ locals {
       {
         name  = "jenkins"
         image = var.image
+        image_pull_policy = "Always"
 
         env = concat([
           {
@@ -103,7 +104,7 @@ locals {
           }
         }
 
-        volume_mounts = [
+        volume_mounts = concat([
           {
             name       = "data"
             mount_path = "/var/jenkins_home"
@@ -112,7 +113,12 @@ locals {
             name       = "casc-configs"
             mount_path = "/var/jenkins_home/casc_configs"
           },
-        ]
+        ], var.enable_plugins_tmpfs ? [
+          {
+            name       = "plugins-tmpfs"
+            mount_path = "/var/jenkins_home/plugins"
+          },
+        ] : [])
       }
     ]
 
@@ -160,7 +166,7 @@ locals {
       type = "Recreate"
     }
 
-    volumes = [
+    volumes = concat([
       {
         name = "data"
         persistent_volume_claim = {
@@ -173,7 +179,14 @@ locals {
           name = var.casc_config_map_name
         }
       },
-    ]
+    ], var.enable_plugins_tmpfs ? [
+      {
+        name = "plugins-tmpfs"
+        empty_dir = {
+          medium = "Memory"
+        }
+      },
+    ] : [])
   }
 }
 

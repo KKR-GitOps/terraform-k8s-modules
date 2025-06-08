@@ -52,3 +52,9 @@ variable "timezone" {
 }
 
 variable "irsa_role_arn" {}
+
+variable "enable_plugins_tmpfs" {
+  description = "Enable plugins tmpfs mount for Jenkins"
+  type        = bool
+  default     = false
+}
