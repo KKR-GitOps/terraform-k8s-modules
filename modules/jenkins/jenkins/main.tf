@@ -53,6 +53,7 @@ locals {
             name  = "JAVA_OPTS"
             value = <<-EOF
             -Xmx$(REQUESTS_MEMORY)m
+            -Dkubernetes.auth.token.autorefresh.enabled=true
             -Dhudson.slaves.NodeProvisioner.initialDelay=0
             -Dhudson.slaves.NodeProvisioner.MARGIN=50
             -Dhudson.slaves.NodeProvisioner.MARGIN0=0.85

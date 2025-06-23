@@ -28,6 +28,9 @@ locals {
       run_asgroup                = "2001"
     }
     service_account_name = module.rbac.name
+    node_selector = {
+      role = "green"
+    }
   }
 }
 
